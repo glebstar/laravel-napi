@@ -15,10 +15,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/bla', function () {
-    return view('bla');
-});
-
 Route::post('api/register', 'Auth\AuthController@apiregister');
 
 Route::group(['prefix' => 'api', 'middleware' => 'auth:api'], function() {
@@ -31,4 +27,3 @@ Route::group(['middleware' => 'web'], function(){
     Route::auth();
     Route::get('/home', 'HomeController@index');
 });
-
