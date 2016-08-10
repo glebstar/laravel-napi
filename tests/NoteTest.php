@@ -63,7 +63,6 @@ class NoteTest extends TestCase
         $response = $this->call ('POST', '/api/note?token=' . self::$apiToken, [
             'note'      => 'test note',
         ]);
-
         $this->assertEquals ('test note', json_decode ($response->content ())->text);
 
         $noteId = json_decode ($response->content ())->id;
@@ -72,14 +71,12 @@ class NoteTest extends TestCase
         copy (__DIR__ . '/_files/_test.jpg', __DIR__ . '/_files/test.jpg');
         $file = new \Illuminate\Http\UploadedFile (__DIR__ . '/_files/test.jpg', 'test.jpg', 'image/jpeg', 104511, 0, true);
 
-        $response = $this->call ('POST', '/api/note/addfile/' . $noteId . '?token=' . self::$apiToken, [
-        ], [], ['attache' => $file]);
+        $response = $this->call ('POST', '/api/note/addfile/' . $noteId . '?token=' . self::$apiToken, [], [], ['attache' => $file]);
 
         $this->assertEquals ($noteId . '.jpg', json_decode ($response->content ())->file);
 
         // get one note for id
         $response = $this->call ('GET', '/api/note/' . $noteId . '?token=' . self::$apiToken);
-
         $this->assertEquals ($noteId, json_decode ($response->content ())->id);
 
         // added second note
