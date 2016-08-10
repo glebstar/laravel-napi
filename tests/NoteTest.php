@@ -75,7 +75,6 @@ class NoteTest extends TestCase
         $file = new \Illuminate\Http\UploadedFile (__DIR__ . '/_files/test.jpg', 'test.jpg', 'image/jpeg', 104511, 0, true);
 
         $response = $this->call ('POST', '/api/note/addfile/' . $noteId . '?token=' . self::$apiToken, [], [], ['attache' => $file]);
-
         $this->assertEquals ($noteId . '.jpg', json_decode ($response->content ())->file);
 
         // try get unknown note
@@ -95,9 +94,7 @@ class NoteTest extends TestCase
         $this->assertEquals (2, count (json_decode ($response->content ())));
 
         // delete one note
-        $this->call ('POST', '/api/note/' . $noteId . '?token=' . self::$apiToken, [
-            '_method'   => 'DELETE',
-        ]);
+        $this->assertEquals (200, $this->call ('POST', '/api/note/' . $noteId . '?token=' . self::$apiToken, ['_method'   => 'DELETE'])->getStatusCode ());
 
         // get all notes
         $response = $this->call ('GET', '/api/note?token=' . self::$apiToken);
@@ -107,7 +104,7 @@ class NoteTest extends TestCase
         $this->assertEquals (404, $this->call ('GET', '/api/note/restore/0?token=' . self::$apiToken)->getStatusCode ());
 
         // restore note
-        $this->call ('GET', '/api/note/restore/' . $noteId . '?token=' . self::$apiToken);
+        $this->assertEquals (200, $this->call ('GET', '/api/note/restore/' . $noteId . '?token=' . self::$apiToken)->getStatusCode ());
 
         // get all notes
         $response = $this->call ('GET', '/api/note?token=' . self::$apiToken);
