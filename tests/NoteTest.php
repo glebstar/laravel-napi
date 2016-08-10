@@ -42,7 +42,7 @@ class NoteTest extends TestCase
         ]);
 
         $response = json_decode ($response->content ());
-        $this->assertEquals (true, isset( $response->token ));
+        $this->assertTrue (isset( $response->token ));
     }
 
     /**
