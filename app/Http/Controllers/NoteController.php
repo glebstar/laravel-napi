@@ -59,12 +59,16 @@ class NoteController extends Controller
      */
     public function show($id)
     {
-        return response ()->json (
-            Note::where ('id', $id)
-                ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
-                ->where ('is_deleted', 0)
-                ->first ()
-        );
+        $note = Note::where ('id', $id)
+                    ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
+                    ->where ('is_deleted', 0)
+                    ->first ();
+
+        if (! $note) {
+            return response ()->json (['error' => 'not found'], 404);
+        }
+
+        return response ()->json ($note);
     }
 
     /**
@@ -96,6 +100,10 @@ class NoteController extends Controller
             ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
             ->first ();
 
+        if (! $note) {
+            return response ()->json (['error' => 'not found'], 404);
+        }
+
         $note->is_deleted = 0;
         $note->save ();
 
@@ -117,7 +125,7 @@ class NoteController extends Controller
         ]);
 
         if ($validator->fails ()) {
-            return response ()->json ($validator->messages ());
+            return response ()->json ($validator->messages (), 400);
         }
 
         $attache  = $request->file ('attache');
