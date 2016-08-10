@@ -16,8 +16,9 @@ Route::get('/', function () {
 });
 
 Route::post('api/register', 'Auth\AuthController@apiregister');
+Route::post('api/login', 'Auth\AuthController@apiauth');
 
-Route::group(['prefix' => 'api', 'middleware' => 'auth:api'], function() {
+Route::group(['prefix' => 'api', 'middleware' => 'jwt.auth'], function() {
     Route::post('note/addfile/{id}', 'NoteController@addfile');
     Route::get('note/restore/{id}', 'NoteController@restore');
     Route::resource('note', 'NoteController');

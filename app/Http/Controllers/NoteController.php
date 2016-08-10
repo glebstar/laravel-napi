@@ -26,7 +26,7 @@ class NoteController extends Controller
         $offset = ( $page - 1 ) * $limit;
 
         return response ()->json (
-            Note::where ('user_id', Auth::guard ('api')->id ())
+            Note::where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
                 ->where ('is_deleted', 0)
                 ->skip ($offset)->take ($limit)
                 ->get ()
@@ -46,7 +46,7 @@ class NoteController extends Controller
 
         return Note::create ([
             'text'    => $note,
-            'user_id' => Auth::guard ('api')->id (),
+            'user_id' => \JWTAuth::parseToken()->authenticate()->id,
         ]);
     }
 
@@ -61,8 +61,7 @@ class NoteController extends Controller
     {
         return response ()->json (
             Note::where ('id', $id)
-            ->where ('user_id', Auth::guard ('api')
-                ->id ())
+                ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
                 ->where ('is_deleted', 0)
                 ->first ()
         );
@@ -78,7 +77,7 @@ class NoteController extends Controller
     public function destroy($id)
     {
         Note::where ('id', $id)
-            ->where ('user_id', Auth::guard ('api')->id ())
+            ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
             ->update (['is_deleted' => 1]);
 
         return response ()->json (['deleted' => $id]);
@@ -94,7 +93,7 @@ class NoteController extends Controller
     public function restore($id)
     {
         $note = Note::where ('id', $id)
-            ->where ('user_id', Auth::guard ('api')->id ())
+            ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
             ->first ();
 
         $note->is_deleted = 0;
@@ -130,7 +129,7 @@ class NoteController extends Controller
 
         $attache->move (base_path () . env ('NOTE_FILE_DIR'), $fileName);
 
-        $note = Note::where ('id', $id)->where ('user_id', Auth::guard ('api')->id ())->first ();
+        $note = Note::where ('id', $id)->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)->first ();
 
         $note->file = $fileName;
         $note->save ();

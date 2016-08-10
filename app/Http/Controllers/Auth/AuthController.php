@@ -9,6 +9,8 @@ use Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
@@ -78,13 +80,34 @@ class AuthController extends Controller
         $validator = $this->validator($request->all());
 
         if ($validator->fails()) {
-            return response()->json ($validator->getMessageBag ());
+            return response()->json ($validator->getMessageBag (), 401);
         }
 
-        $user = $this->create ($request->all());
+        $this->create ($request->all());
 
-        return response ()->json([
-            'api_token' => $user->api_token
-        ]);
+        return $this->apilogin ($request);
+    }
+
+    public function apiauth(HRequest $request) {
+        return $this->apilogin ($request);
+    }
+
+    protected function apilogin(HRequest $request)
+    {
+        // grab credentials from the request
+        $credentials = $request->only('email', 'password');
+
+        try {
+            // attempt to verify the credentials and create a token for the user
+            if (! $token = JWTAuth::attempt($credentials)) {
+                return response()->json(['error' => 'invalid_credentials'], 401);
+            }
+        } catch (JWTException $e) {
+            // something went wrong whilst attempting to encode the token
+            return response()->json(['error' => 'could_not_create_token'], 500);
+        }
+
+        // all good so return the token
+        return response()->json(compact('token'));
     }
 }
