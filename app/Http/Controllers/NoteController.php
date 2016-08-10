@@ -120,6 +120,11 @@ class NoteController extends Controller
      */
     public function addfile($id, Request $request)
     {
+        $note = Note::where ('id', $id)->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)->first ();
+        if (! $note) {
+            return response ()->json (['error' => 'not found'], 404);
+        }
+
         $validator = Validator::make ($request->all (), [
             'attache' => 'required|mimes:jpeg,png',
         ]);
@@ -136,8 +141,6 @@ class NoteController extends Controller
         }
 
         $attache->move (base_path () . env ('NOTE_FILE_DIR'), $fileName);
-
-        $note = Note::where ('id', $id)->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)->first ();
 
         $note->file = $fileName;
         $note->save ();

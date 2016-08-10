@@ -67,6 +67,9 @@ class NoteTest extends TestCase
 
         $noteId = json_decode ($response->content ())->id;
 
+        // try added atache for unknown note
+        $this->assertEquals (404, $this->call ('POST', '/api/note/addfile/0?token=' . self::$apiToken)->getStatusCode ());
+
         //try added bad attache
         $this->assertEquals (400, $this->call ('POST', '/api/note/addfile/' . $noteId . '?token=' . self::$apiToken)->getStatusCode ());
 
