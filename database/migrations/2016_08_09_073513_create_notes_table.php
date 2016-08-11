@@ -18,7 +18,7 @@ class CreateNotesTable extends Migration
             $table->foreign ('user_id')->references ('id')->on ('users');
             $table->text ('text');
             $table->string ('file')->default ('');
-            $table->tinyInteger ('is_deleted')->default (0);
+            $table->softDeletes();
             $table->timestamps ();
         });
     }

@@ -27,7 +27,6 @@ class NoteController extends Controller
 
         return response ()->json (
             Note::where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
-                ->where ('is_deleted', 0)
                 ->skip ($offset)->take ($limit)
                 ->get ()
         );
@@ -42,6 +41,14 @@ class NoteController extends Controller
      */
     public function store(Request $request)
     {
+        $validator = Validator::make ($request->all (), [
+            'note' => 'required',
+        ]);
+
+        if ($validator->fails ()) {
+            return response ()->json ($validator->messages (), 400);
+        }
+
         $note = $request->input ('note');
 
         return Note::create ([
@@ -60,12 +67,14 @@ class NoteController extends Controller
     public function show($id)
     {
         $note = Note::where ('id', $id)
-                    ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
-                    ->where ('is_deleted', 0)
                     ->first ();
 
         if (! $note) {
             return response ()->json (['error' => 'not found'], 404);
+        }
+
+        if ($note->user_id != \JWTAuth::parseToken()->authenticate()->id) {
+            return response ()->json (['error' => 'not access'], 401);
         }
 
         return response ()->json ($note);
@@ -80,10 +89,18 @@ class NoteController extends Controller
      */
     public function destroy($id)
     {
-        Note::where ('id', $id)
-            ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
-            ->update (['is_deleted' => 1]);
+        $note = Note::where ('id', $id)
+                    ->first ();
 
+        if(! $note) {
+            return response ()->json (['error' => 'not found'], 404);
+        }
+
+        if ($note->user_id != \JWTAuth::parseToken()->authenticate()->id) {
+            return response ()->json (['error' => 'not access'], 401);
+        }
+
+        $note->delete();
         return response ()->json (['deleted' => $id]);
     }
 
@@ -96,17 +113,19 @@ class NoteController extends Controller
      */
     public function restore($id)
     {
-        $note = Note::where ('id', $id)
-            ->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)
-            ->first ();
+        $note = Note::withTrashed()
+                ->where ('id', $id)
+                ->first ();
 
         if (! $note) {
             return response ()->json (['error' => 'not found'], 404);
         }
 
-        $note->is_deleted = 0;
-        $note->save ();
+        if ($note->user_id != \JWTAuth::parseToken()->authenticate()->id) {
+            return response ()->json (['error' => 'not access'], 401);
+        }
 
+        $note->restore();
         return response ()->json ($note);
     }
 
@@ -120,9 +139,15 @@ class NoteController extends Controller
      */
     public function addfile($id, Request $request)
     {
-        $note = Note::where ('id', $id)->where ('user_id', \JWTAuth::parseToken()->authenticate()->id)->first ();
+        $note = Note::where ('id', $id)
+                    ->first ();
+
         if (! $note) {
             return response ()->json (['error' => 'not found'], 404);
+        }
+
+        if ($note->user_id != \JWTAuth::parseToken()->authenticate()->id) {
+            return response ()->json (['error' => 'not access'], 401);
         }
 
         $validator = Validator::make ($request->all (), [
