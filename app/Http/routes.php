@@ -30,6 +30,12 @@ Route::group(['prefix' => 'api/v101', 'middleware' => 'jwt.auth'], function() {
     Route::resource('note', 'NoteV1_0_1Controller');
 });
 
+Route::group(['prefix' => 'api/v2', 'middleware' => 'jwt.auth'], function() {
+    Route::post('note/addfile/{id}', 'NoteV2Controller@addfile');
+    Route::get('note/restore/{id}', 'NoteV2Controller@restore');
+    Route::resource('note', 'NoteV2Controller');
+});
+
 Route::group(['middleware' => 'web'], function(){
     Route::auth();
     Route::get('/home', 'HomeController@index');

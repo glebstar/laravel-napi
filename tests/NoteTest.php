@@ -216,4 +216,20 @@ class NoteTest extends TestCase
         $response = $this->call ('GET', '/api/v101/note/' . $params['noteId'] . '?token=' . $params['token']);
         $this->assertEquals ($params['noteId'], json_decode ($response->content ())->id);
     }
+
+    /**
+     * Testing other version
+     *
+     * @param array $params token and noteId
+     *
+     * @depends testAddNote
+     *
+     * @return void
+     */
+    public function testVersion2(array $params)
+    {
+        // get one note for id
+        $response = $this->call ('GET', '/api/v2/note/' . $params['noteId'] . '?token=' . $params['token']);
+        $this->assertEquals ($params['noteId'], json_decode ($response->content ())->id);
+    }
 }
