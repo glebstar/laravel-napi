@@ -12,7 +12,9 @@ class NoteTest extends TestCase
         $response = $this->call ('POST', 'api/register');
         $this->assertEquals ('The name field is required.', json_decode ($response->content ())->name[0]);
 
-        $email = str_random ('5') . '@gmail.com';
+        $faker = Faker\Factory::create();
+
+        $email = $faker->email;
         $password = '123456';
 
         $response = $this->call ('POST', 'api/register', [
@@ -76,10 +78,13 @@ class NoteTest extends TestCase
         ]);
         $this->assertEquals (400, $response->getStatusCode ());
 
+        $faker = Faker\Factory::create();
+        $noteText = $faker->text;
+
         $response = $this->call ('POST', '/api/note?token=' . $token, [
-            'note'      => 'test note',
+            'note'      => $noteText,
         ]);
-        $this->assertEquals ('test note', json_decode ($response->content ())->text);
+        $this->assertEquals ($noteText, json_decode ($response->content ())->text);
 
         return [
             'token' => $token,
