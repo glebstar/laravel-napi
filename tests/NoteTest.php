@@ -9,7 +9,7 @@ class NoteTest extends TestCase
      */
     public function testRegister()
     {
-        $response = $this->call ('POST', 'api/register');
+        $response = $this->call ('POST', 'api/v1/register');
         $this->assertEquals ('The name field is required.', json_decode ($response->content ())->name[0]);
 
         $faker = Faker\Factory::create();
@@ -17,7 +17,7 @@ class NoteTest extends TestCase
         $email = $faker->email;
         $password = '123456';
 
-        $response = $this->call ('POST', 'api/register', [
+        $response = $this->call ('POST', 'api/v1/register', [
             'name'                  => 'Test',
             'email'                 => $email,
             'password'              => $password,
@@ -45,7 +45,7 @@ class NoteTest extends TestCase
     public function testAuth(array $credentials)
     {
         // not valid password
-        $response = $this->call ('POST', 'api/login', [
+        $response = $this->call ('POST', 'api/v1/login', [
             'email'                 => $credentials['email'],
             'password'              => '--',
         ]);
@@ -53,7 +53,7 @@ class NoteTest extends TestCase
         $this->assertEquals (401, $response->getStatusCode ());
 
         // valid auth
-        $response = $this->call ('POST', 'api/login', [
+        $response = $this->call ('POST', 'api/v1/login', [
             'email'                 => $credentials['email'],
             'password'              => $credentials['password'],
         ]);
@@ -73,7 +73,7 @@ class NoteTest extends TestCase
     public function testAddNote($token)
     {
         // try added empty note
-        $response = $this->call ('POST', '/api/note?token=' . $token, [
+        $response = $this->call ('POST', '/api/v1/note?token=' . $token, [
             'note'      => '',
         ]);
         $this->assertEquals (400, $response->getStatusCode ());
@@ -81,7 +81,7 @@ class NoteTest extends TestCase
         $faker = Faker\Factory::create();
         $noteText = $faker->text;
 
-        $response = $this->call ('POST', '/api/note?token=' . $token, [
+        $response = $this->call ('POST', '/api/v1/note?token=' . $token, [
             'note'      => $noteText,
         ]);
         $this->assertEquals ($noteText, json_decode ($response->content ())->text);
@@ -104,17 +104,17 @@ class NoteTest extends TestCase
     public function testAddAttacheForNote(array $params)
     {
         // try added atache for unknown note
-        $this->assertEquals (404, $this->call ('POST', '/api/note/addfile/0?token=' . $params['token'])->getStatusCode ());
+        $this->assertEquals (404, $this->call ('POST', '/api/v1/note/addfile/0?token=' . $params['token'])->getStatusCode ());
 
         //try added bad attache
-        $this->assertEquals (400, $this->call ('POST', '/api/note/addfile/' . $params['noteId'] . '?token=' . $params['token'])
+        $this->assertEquals (400, $this->call ('POST', '/api/v1/note/addfile/' . $params['noteId'] . '?token=' . $params['token'])
             ->getStatusCode ());
 
         // added atache
         copy (__DIR__ . '/_files/_test.jpg', __DIR__ . '/_files/test.jpg');
         $file = new \Illuminate\Http\UploadedFile (__DIR__ . '/_files/test.jpg', 'test.jpg', 'image/jpeg', 104511, 0, true);
 
-        $response = $this->call ('POST', '/api/note/addfile/' . $params['noteId'] . '?token=' . $params['token'], [], [], ['attache' => $file]);
+        $response = $this->call ('POST', '/api/v1/note/addfile/' . $params['noteId'] . '?token=' . $params['token'], [], [], ['attache' => $file]);
         $this->assertEquals ($params['noteId'] . '.jpg', json_decode ($response->content ())->file);
     }
 
@@ -130,10 +130,10 @@ class NoteTest extends TestCase
     public function testGetOneNote(array $params)
     {
         // try get unknown note
-        $this->assertEquals (404, $this->call ('GET', '/api/note/0?token=' . $params['token'])->getStatusCode ());
+        $this->assertEquals (404, $this->call ('GET', '/api/v1/note/0?token=' . $params['token'])->getStatusCode ());
 
         // get one note for id
-        $response = $this->call ('GET', '/api/note/' . $params['noteId'] . '?token=' . $params['token']);
+        $response = $this->call ('GET', '/api/v1/note/' . $params['noteId'] . '?token=' . $params['token']);
         $this->assertEquals ($params['noteId'], json_decode ($response->content ())->id);
     }
 
@@ -149,12 +149,12 @@ class NoteTest extends TestCase
     public function testGetNotes(array $params)
     {
         // added second note
-        $this->call ('POST', '/api/note?token=' . $params['token'], [
+        $this->call ('POST', '/api/v1/note?token=' . $params['token'], [
             'note'      => 'test note 2',
         ]);
 
         // get all notes
-        $response = $this->call ('GET', '/api/note?token=' . $params['token']);
+        $response = $this->call ('GET', '/api/v1/note?token=' . $params['token']);
         $this->assertEquals (2, count (json_decode ($response->content ())));
     }
 
@@ -170,11 +170,11 @@ class NoteTest extends TestCase
     public function testDeleteNote(array $params)
     {
         // delete one note
-        $this->assertEquals (200, $this->call ('POST', '/api/note/' . $params['noteId'] . '?token=' . $params['token'], ['_method'   => 'DELETE'])
+        $this->assertEquals (200, $this->call ('POST', '/api/v1/note/' . $params['noteId'] . '?token=' . $params['token'], ['_method'   => 'DELETE'])
             ->getStatusCode ());
 
         // get all notes
-        $response = $this->call ('GET', '/api/note?token=' . $params['token']);
+        $response = $this->call ('GET', '/api/v1/note?token=' . $params['token']);
         $this->assertEquals (1, count (json_decode ($response->content ())));
     }
 
@@ -190,14 +190,30 @@ class NoteTest extends TestCase
     public function testRestoreNote(array $params)
     {
         // try restore unknown note
-        $this->assertEquals (404, $this->call ('GET', '/api/note/restore/0?token=' . $params['token'])->getStatusCode ());
+        $this->assertEquals (404, $this->call ('GET', '/api/v1/note/restore/0?token=' . $params['token'])->getStatusCode ());
 
         // restore note
-        $this->assertEquals (200, $this->call ('GET', '/api/note/restore/' . $params['noteId'] . '?token=' . $params['token'])
+        $this->assertEquals (200, $this->call ('GET', '/api/v1/note/restore/' . $params['noteId'] . '?token=' . $params['token'])
             ->getStatusCode ());
 
         // get all notes
-        $response = $this->call ('GET', '/api/note?token=' . $params['token']);
+        $response = $this->call ('GET', '/api/v1/note?token=' . $params['token']);
         $this->assertEquals (2, count (json_decode ($response->content ())));
+    }
+
+    /**
+     * Testing other version
+     *
+     * @param array $params token and noteId
+     *
+     * @depends testAddNote
+     *
+     * @return void
+     */
+    public function testVersion101(array $params)
+    {
+        // get one note for id
+        $response = $this->call ('GET', '/api/v101/note/' . $params['noteId'] . '?token=' . $params['token']);
+        $this->assertEquals ($params['noteId'], json_decode ($response->content ())->id);
     }
 }
