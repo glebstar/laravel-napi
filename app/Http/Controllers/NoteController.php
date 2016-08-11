@@ -7,6 +7,7 @@ use App\Http\Requests;
 use Auth;
 use App\Note;
 use Validator;
+use Illuminate\Support\Facades\Storage;
 
 class NoteController extends Controller
 {
@@ -161,11 +162,18 @@ class NoteController extends Controller
         $attache  = $request->file ('attache');
         $fileName = $id . '.' . $attache->getClientOriginalExtension ();
 
-        if (file_exists (base_path () . env ('NOTE_FILE_DIR') . $fileName)) {
-            unlink (base_path () . env ('NOTE_FILE_DIR') . $fileName);
+        $newPath = env ('NOTE_FILE_DIR') . '/' . $fileName;
+
+        if (! Storage::exists(env ('NOTE_FILE_DIR'))) {
+            Storage::makeDirectory(env ('NOTE_FILE_DIR'));
         }
 
-        $attache->move (base_path () . env ('NOTE_FILE_DIR'), $fileName);
+        if ($note->file && Storage::exists(env ('NOTE_FILE_DIR') . '/' . $note->file)) {
+            Storage::delete(env ('NOTE_FILE_DIR') . '/' . $note->file);
+        }
+
+        Storage::put($newPath, file_get_contents($attache));
+        unlink ($attache->getPathname ());
 
         $note->file = $fileName;
         $note->save ();
